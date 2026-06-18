@@ -69,64 +69,13 @@ Wait for response (accept number or name). Save the chosen character name to `pe
 
 ---
 
-### ONBOARDING STEP 1: Productivity suite
+### ONBOARDING STEP 1: News preferences
 
 **Adopt the chosen persona's voice from this point forward.**
 
 Say (in persona):
 
-> **Step 1 of 4: Connect your productivity suite**
->
-> Connecting your Google or Microsoft account unlocks two things:
-> - **Calendar**: I'll surface your upcoming meetings and flag anything needing prep
-> - **Email**: I'll scan your inbox for job alert emails you've already set up — the most reliable source of fresh listings
->
-> Which would you prefer?
->
-> 1) Google Workspace (Gmail + Google Calendar)
-> 2) Microsoft 365 (Outlook + Outlook Calendar)
-> 3) Skip for now — I'll use web sources only
-
-Wait for response.
-
-**If 1 or 2:**
-- Set `calendar_type` to `"google"` or `"microsoft"` in state
-- Set `onboarding_step` to `"awaiting_integration_setup"` and **save state to `state/profile.json` immediately** before giving the setup instructions (so if the user leaves and returns, onboarding resumes here)
-- Say (in persona):
-
-> Great. Here's exactly how to run the setup:
->
-> 1) The setup script lives inside your project folder — the same folder that contains the `.claude/` directory you're using right now
-> 2) You don't need to navigate anywhere or move any files — just type the following command directly into the Claude Code prompt with a `!` prefix:
->    ```
->    ! python3 fetchers/setup.py --provider [google or microsoft]
->    ```
->    For example, for Google:
->    ```
->    ! python3 fetchers/setup.py --provider google
->    ```
-> 3) This will open a browser window for authentication. Once you've signed in, the script saves your credentials to `state/credentials.json` automatically — **you don't need to move or copy any files**
-> 4) Come back here and type **done** when the script finishes successfully
->
-> Or type **skip** if you'd rather set this up another time.
-
-- Wait. If "done": set `tier` to 2 and move to the next step.
-- If "skip": set `tier` to 1, `calendar_type` to null, say (in persona) "No problem — I'll use web sources. You can connect your account any time by running `/morning-brief-setup`."
-
-**Resuming after setup:** If the user returns and `onboarding_step` is `"awaiting_integration_setup"`, say (in persona):
-> "Welcome back — looks like you were in the middle of setting up your [Google/Microsoft] integration. Did the setup script complete successfully? Type **done** to continue, or **skip** to use web sources only."
-
-**If 3:**
-- Set `tier` to 1, `calendar_type` to null
-- Say (in persona): "No problem — I'll use web sources for everything. You can always connect your account later by running `/morning-brief-setup`."
-
----
-
-### ONBOARDING STEP 2: News preferences
-
-Say (in persona):
-
-> **Step 2 of 4: What industry news do you want?**
+> **Step 1 of 4: What industry news do you want?**
 >
 > Every morning I'll surface the most relevant headlines for your job search. Pick any categories that apply — type the numbers, or describe your own:
 >
@@ -145,11 +94,11 @@ Wait for response. Parse into a list of topic strings. Save to `news_preferences
 
 ---
 
-### ONBOARDING STEP 3: Job profile
+### ONBOARDING STEP 2: Job profile
 
 Say (in persona):
 
-> **Step 3 of 4: Build your job profile**
+> **Step 2 of 4: Build your job profile**
 >
 > How would you like to do this?
 >
@@ -183,7 +132,7 @@ Wait for response. Save to `job_profile.job_functions` as an array (1–2 items 
 
 ---
 
-### ONBOARDING STEP 4: Experience and filters
+### ONBOARDING STEP 3: Experience and filters
 
 For **each** job function in `job_profile.job_functions`, ask in sequence (in persona):
 
@@ -248,6 +197,57 @@ Run 2–3 targeted job searches using the profile to verify you can surface at l
 > Which would you like to adjust, or should I try all three?
 
 Iterate until at least 5 results are found, then update `job_profile` accordingly.
+
+---
+
+### ONBOARDING STEP 4: Connect your productivity suite
+
+Say (in persona):
+
+> **Step 4 of 4: Connect your productivity suite**
+>
+> Connecting your Google or Microsoft account unlocks two things:
+> - **Calendar**: I'll surface your upcoming meetings and flag anything needing prep
+> - **Email**: I'll scan your inbox for job alert emails you've already set up — the most reliable source of fresh listings
+>
+> Which would you prefer?
+>
+> 1) Google Workspace (Gmail + Google Calendar)
+> 2) Microsoft 365 (Outlook + Outlook Calendar)
+> 3) Skip for now — I'll use web sources only
+
+Wait for response.
+
+**If 1 or 2:**
+- Set `calendar_type` to `"google"` or `"microsoft"` in state
+- Set `onboarding_step` to `"awaiting_integration_setup"` and **save state to `state/profile.json` immediately** before giving the setup instructions (so if the user leaves and returns, onboarding resumes here)
+- Say (in persona):
+
+> Great. Here's exactly how to run the setup:
+>
+> 1) The setup script lives inside your project folder — the same folder that contains the `.claude/` directory you're using right now
+> 2) You don't need to navigate anywhere or move any files — just type the following command directly into the Claude Code prompt with a `!` prefix:
+>    ```
+>    ! python3 fetchers/setup.py --provider [google or microsoft]
+>    ```
+>    For example, for Google:
+>    ```
+>    ! python3 fetchers/setup.py --provider google
+>    ```
+> 3) This will open a browser window for authentication. Once you've signed in, the script saves your credentials to `state/credentials.json` automatically — **you don't need to move or copy any files**
+> 4) Come back here and type **done** when the script finishes successfully
+>
+> Or type **skip** if you'd rather set this up another time.
+
+- Wait. If "done": set `tier` to 2 and move to the next step.
+- If "skip": set `tier` to 1, `calendar_type` to null, say (in persona) "No problem — I'll use web sources. You can connect your account any time by running `/morning-brief-setup`."
+
+**Resuming after setup:** If the user returns and `onboarding_step` is `"awaiting_integration_setup"`, say (in persona):
+> "Welcome back — looks like you were in the middle of setting up your [Google/Microsoft] integration. Did the setup script complete successfully? Type **done** to continue, or **skip** to use web sources only."
+
+**If 3:**
+- Set `tier` to 1, `calendar_type` to null
+- Say (in persona): "No problem — I'll use web sources for everything. You can always connect your account later by running `/morning-brief-setup`."
 
 ---
 
