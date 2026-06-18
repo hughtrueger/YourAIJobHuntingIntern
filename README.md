@@ -6,22 +6,12 @@ A daily Claude-powered job hunting brief that delivers personalised job listings
 
 ## How it works
 
-Run `/morning-brief` in any Claude Code session inside this directory. On first run you'll be guided through a short onboarding to build your job profile and optionally connect your email and calendar.
+Run `/morning-brief` in any Claude Code session inside this directory. On first run you'll be guided through a short onboarding to build your job profile and connect your email and calendar.
 
 Each morning you get three sections:
 - **Job listings** — matched to your profile, sorted by recency then fit score
 - **Calendar** — upcoming meetings flagged for prep, conflicts, and logistical reminders
 - **Industry news** — scoped to the topics you care about, covering the lookback window since your last brief
-
----
-
-## Quick Start (Tier 1 — no setup required)
-
-1. Clone this repo
-2. Open a Claude Code session in this directory
-3. Run `/morning-brief`
-
-Claude uses web search for news and job listings. No Python, no accounts, no dependencies needed.
 
 ---
 
@@ -76,19 +66,67 @@ Data is fetched at 8am Mon–Fri and cached in `state/`. When you run `/morning-
 
 ---
 
+## Quick Start (Tier 1 — no setup required)
+
+Claude uses web search for news and job listings. No Python, no accounts, no dependencies needed beyond Claude Code itself.
+
+### 1. Get Claude Code
+
+Claude Code is Anthropic's AI coding tool — it's what runs the intern. You'll need an account and an active Pro or Max subscription.
+
+1. Go to [claude.ai/code](https://claude.ai/code) and create an Anthropic account
+2. Subscribe to Pro or Max (Claude Code requires a paid plan)
+3. Download the **desktop app** for [Mac or Windows](https://claude.ai/code) — this is the easiest way to get started
+
+> **Comfortable with a terminal?** You can also install the CLI with `npm install -g @anthropic-ai/claude-code` and run `claude` from any folder.
+
+### 2. Download this project
+
+**Option A — using Git** (if you have it):
+```bash
+git clone https://github.com/hughtrueger/YourAIJobHuntingIntern.git
+```
+
+**Option B — no Git needed:**
+1. Click the green **Code** button at the top of this GitHub page
+2. Select **Download ZIP**
+3. Unzip the folder somewhere you'll remember (e.g. your Documents folder)
+
+### 3. Open the project in Claude Code
+
+**Desktop app:** Open Claude Code, click **Open Folder**, and select the `YourAIJobHuntingIntern` folder you just downloaded.
+
+**Terminal:** Navigate to the folder and run:
+```bash
+cd YourAIJobHuntingIntern
+claude
+```
+
+### 4. Run the brief
+
+Once you're in a Claude Code session inside the project folder, type:
+
+```
+/morning-brief
+```
+
+That's it. Onboarding runs automatically and guides you through everything.
+
+---
+
 ## Onboarding walkthrough
 
 On first run, the intern guides you through five steps:
 
-**Step 0 — Pick a personality.** Choose one of five characters — Alfred Pennyworth, Dobby, Renfield, Dexter, or Garth Algar. The intern adopts that character's tone for all responses.
+**Step 0 — Pick a personality.** Choose one of four characters — Garth Algar, Dobby, Alfred Pennyworth, or Renfield. The intern adopts that character's tone for all responses.
 
-**Step 1 — Connect your productivity suite.** Optionally connect Google or Microsoft for email and calendar. Full step-by-step instructions are provided inline — you run the setup script directly from the Claude Code prompt.
+**Step 1 — News preferences.** Pick the industry topics you want covered each morning (AI, fintech, XR, consumer tech, etc.).
 
-**Step 2 — News preferences.** Pick the industry topics you want covered each morning (AI, fintech, XR, consumer tech, etc.).
+**Step 2 — Job profile.** Either answer a few questions or paste your CV — the intern extracts target companies, job functions, and experience level automatically from a CV upload.
 
-**Step 3 — Job profile.** Either answer a few questions or paste your CV — the intern extracts target companies, job functions, and experience level automatically from a CV upload.
+**Step 3 — Experience and filters.** Set experience years and seniority keywords (senior, staff, principal, etc.) per job function, plus location and other filters.
 
-**Step 4 — Experience and filters.** Set experience years and seniority keywords (senior, staff, principal, etc.) per job function, plus location and other filters.
+**Step 4 — Connect your productivity suite.** Connect Google or Microsoft for email and calendar. Full step-by-step instructions are provided inline — you run the setup script directly from the Claude Code prompt.
 
 After completing setup, the intern silently validates that your profile returns at least 5 job results. If it doesn't, it surfaces a debug menu to broaden the search before running your first brief.
 
@@ -151,6 +189,6 @@ All data stays local. Credentials, tokens, and your personal profile are gitigno
 
 ## Requirements
 
-- [Claude Code](https://claude.ai/code) with an active subscription
+- [Claude Code](https://claude.ai/code) with an active Pro or Max subscription
 - Python 3.9+ (Tier 2 only)
 - A Google Cloud project with OAuth credentials (Tier 2 Google only)
