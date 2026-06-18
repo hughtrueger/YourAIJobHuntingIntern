@@ -1,0 +1,18 @@
+{
+  "onboarding_complete": false,
+  "onboarding_step": "start",
+  "persona": null,
+  "tier": 1,
+  "last_run": null,
+  "news_preferences": [],
+  "calendar_type": null,
+  "job_profile": {
+    "target_companies": [],
+    "job_functions": [],
+    "experience_by_function": {},
+    "job_profile_summary": null,
+    "other_variables": []
+  },
+  "job_sources": [],
+  "last_job_fetch": null
+}

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.aijobintern</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/python3</string>
+        <!-- REPLACE with absolute path to run_fetchers.py -->
+        <string>/PATH/TO/ai-job-intern/fetchers/run_fetchers.py</string>
+    </array>
+
+    <key>StartCalendarInterval</key>
+    <array>
+        <!-- Monday 8:00am -->
+        <dict><key>Weekday</key><integer>1</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>0</integer></dict>
+        <!-- Tuesday 8:00am -->
+        <dict><key>Weekday</key><integer>2</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>0</integer></dict>
+        <!-- Wednesday 8:00am -->
+        <dict><key>Weekday</key><integer>3</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>0</integer></dict>
+        <!-- Thursday 8:00am -->
+        <dict><key>Weekday</key><integer>4</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>0</integer></dict>
+        <!-- Friday 8:00am -->
+        <dict><key>Weekday</key><integer>5</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>0</integer></dict>
+    </array>
+
+    <!-- REPLACE with absolute paths -->
+    <key>StandardOutPath</key>
+    <string>/PATH/TO/ai-job-intern/state/fetcher.log</string>
+    <key>StandardErrorPath</key>
+    <string>/PATH/TO/ai-job-intern/state/fetcher-error.log</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>

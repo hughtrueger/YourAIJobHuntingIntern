@@ -1,0 +1,26 @@
+# OAuth credentials and tokens — never commit these
+state/credentials.json
+state/token.json
+state/ms_token.json
+state/ms_config.json
+fetchers/client_secret*.json
+!fetchers/client_secret.example.json
+
+# Fetched data cache — personal and ephemeral
+state/gmail_jobs.json
+state/calendar.json
+state/fetcher.log
+state/fetcher-error.log
+
+# Personal job profile — users maintain their own
+state/profile.json
+
+# Local Claude Code settings — contains machine-specific paths
+.claude/settings.local.json
+
+# Python
+__pycache__/
+*.pyc
+
+# macOS
+**/.DS_Store
