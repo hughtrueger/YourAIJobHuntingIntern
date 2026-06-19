@@ -69,7 +69,19 @@ Data is fetched at 8am Mon–Fri and cached in `state/`. When you run `/morning-
 
 Claude uses web search for news and job listings. No Python, no accounts, no dependencies needed beyond Claude Code itself.
 
-### 1. Get Claude Code
+### 1. Connect to this repo
+
+**Option A — using Git** (if you have it):
+```bash
+git clone https://github.com/hughtrueger/YourAIJobHuntingIntern.git
+```
+
+**Option B — no Git needed:**
+1. Click the green **Code** button at the top of this GitHub page
+2. Select **Download ZIP**
+3. Unzip the folder somewhere you'll remember (e.g. your Documents folder)
+
+### 2. Get Claude Code
 
 Claude Code is Anthropic's AI coding tool — it's what runs the intern. You'll need an account and an active Pro or Max subscription.
 
@@ -78,6 +90,12 @@ Claude Code is Anthropic's AI coding tool — it's what runs the intern. You'll 
 3. Download the **desktop app** for [Mac or Windows](https://claude.ai/code) — this is the easiest way to get started
 
 > **Comfortable with a terminal?** You can also install the CLI with `npm install -g @anthropic-ai/claude-code` and run `claude` from any folder.
+
+### 3. Open the project in Claude Code
+
+**Desktop app:** Open Claude Code, click **Open Folder**, and select the `YourAIJobHuntingIntern` folder you just downloaded.
+
+**Terminal:** Navigate to the project folder and run `claude`.
 
 ---
 
@@ -114,28 +132,6 @@ cd C:\Users\YourName\Documents\YourAIJobHuntingIntern
 - *Not sure where you are?* — type `pwd` (Mac) or `cd` with no arguments (Windows) and press Enter. It prints your current location.
 
 ---
-
-### 2. Download this project
-
-**Option A — using Git** (if you have it):
-```bash
-git clone https://github.com/hughtrueger/YourAIJobHuntingIntern.git
-```
-
-**Option B — no Git needed:**
-1. Click the green **Code** button at the top of this GitHub page
-2. Select **Download ZIP**
-3. Unzip the folder somewhere you'll remember (e.g. your Documents folder)
-
-### 3. Open the project in Claude Code
-
-**Desktop app:** Open Claude Code, click **Open Folder**, and select the `YourAIJobHuntingIntern` folder you just downloaded.
-
-**Terminal:** Navigate to the folder and run:
-```bash
-cd YourAIJobHuntingIntern
-claude
-```
 
 ### 4. Run the brief
 
