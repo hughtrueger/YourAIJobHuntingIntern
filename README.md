@@ -80,6 +80,21 @@ Claude Code is Anthropic's AI coding tool — it's what runs the intern. You'll 
 
 > **Comfortable with a terminal?** You can also install the CLI with `npm install -g @anthropic-ai/claude-code` and run `claude` from any folder.
 
+---
+
+**New to terminals?** A terminal is a text-based way to control your computer. Here's how to open one:
+
+- **Mac:** Press `Cmd + Space`, type `Terminal`, press Enter. Or go to Applications → Utilities → Terminal.
+- **Windows:** Press `Win + R`, type `cmd`, press Enter. Or search for **PowerShell** in the Start menu.
+
+Once it's open, you navigate by typing `cd` followed by a folder path. For example, if you unzipped the project into your Documents folder:
+```bash
+cd ~/Documents/YourAIJobHuntingIntern
+```
+Then press Enter. You're now inside the project folder and ready to run commands.
+
+---
+
 ### 2. Download this project
 
 **Option A — using Git** (if you have it):
