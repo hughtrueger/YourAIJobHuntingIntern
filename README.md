@@ -1,6 +1,6 @@
 # AI Job Hunting Intern
 
-Your AI job hunting assistant — powered by Claude. Every weekday morning, it makes sure you start your day focused on the best, most active job listings, up to date on the most important industry news, and ready for every meeting in your calendar.
+Your AI job hunting assistant — powered by Claude. Every weekday morning, your AI intern will make sure you start your day focused on the best, most active job listings, up to date on the most important industry news, and ready for every meeting in your calendar.
 
 Run `/morning-brief` and your assistant goes to work: scanning job boards and career pages for roles matched to your profile, reviewing your calendar for anything that needs prep, and pulling the headlines relevant to the companies and sectors you care about. Then it brings it all back to you in one focused brief — delivered by a character of your choosing, from a devoted butler to an anxious genius drummer.
 
