@@ -1,17 +1,16 @@
 # AI Job Hunting Intern
 
-A daily Claude-powered job hunting brief that delivers personalised job listings, calendar prep, and industry news every weekday morning — built as a Claude Code slash command.
+Your AI job hunting assistant — powered by Claude. Every weekday morning, it makes sure you start the day knowing exactly which jobs to apply for, prepared for every meeting on your calendar, and sharp on the industry news that matters for your search.
+
+Run `/morning-brief` and your assistant goes to work: scanning job boards and career pages for roles matched to your profile, reviewing your calendar for anything that needs prep, and pulling the headlines relevant to the companies and sectors you care about. Then it brings it all back to you in one focused brief — delivered by a character of your choosing, from a devoted butler to an anxious genius drummer.
 
 ---
 
-## How it works
+## What you get each morning
 
-Run `/morning-brief` in any Claude Code session inside this directory. On first run you'll be guided through a short onboarding to build your job profile and connect your email and calendar.
-
-Each morning you get three sections:
-- **Job listings** — matched to your profile, sorted by recency then fit score
-- **Calendar** — upcoming meetings flagged for prep, conflicts, and logistical reminders
-- **Industry news** — scoped to the topics you care about, covering the lookback window since your last brief
+- **Job listings** — matched to your profile, ranked by recency and fit, with a line on why each one made the cut
+- **Calendar** — upcoming meetings flagged for prep, conflicts surfaced, anything logistical you shouldn't walk into cold
+- **Industry news** — the headlines that matter for your search, scoped to your sectors and covering everything since your last brief
 
 ---
 
