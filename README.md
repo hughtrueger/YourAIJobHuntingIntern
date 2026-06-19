@@ -82,16 +82,37 @@ Claude Code is Anthropic's AI coding tool — it's what runs the intern. You'll 
 
 ---
 
-**New to terminals?** A terminal is a text-based way to control your computer. Here's how to open one:
+**New to terminals?** A terminal is a text-based way to give your computer instructions. Here's how to open one and get to the right folder.
 
-- **Mac:** Press `Cmd + Space`, type `Terminal`, press Enter. Or go to Applications → Utilities → Terminal.
-- **Windows:** Press `Win + R`, type `cmd`, press Enter. Or search for **PowerShell** in the Start menu.
+**Opening a terminal:**
+- **Mac:** Press `Cmd + Space`, type `Terminal`, press Enter.
+- **Windows:** Search for **PowerShell** in the Start menu and open it.
 
-Once it's open, you navigate by typing `cd` followed by a folder path. For example, if you unzipped the project into your Documents folder:
+**Navigating to the project folder:**
+
+The command `cd` means "change directory" — it moves you into a folder. You need to tell it the full path to wherever you saved the project.
+
+The easiest way to get the correct path:
+
+- **Mac:** Open Finder, find the `YourAIJobHuntingIntern` folder, then drag and drop it directly onto the Terminal window after typing `cd ` (with a space). The full path fills in automatically. Press Enter.
+- **Windows:** Open File Explorer, navigate to the folder, click the address bar at the top, and copy the path shown. In PowerShell, type `cd ` then paste the path and press Enter.
+
+If you unzipped it to Documents, it's probably:
 ```bash
+# Mac
 cd ~/Documents/YourAIJobHuntingIntern
+
+# Windows
+cd C:\Users\YourName\Documents\YourAIJobHuntingIntern
 ```
-Then press Enter. You're now inside the project folder and ready to run commands.
+
+**Check it worked** — type `ls` (Mac) or `dir` (Windows) and press Enter. You should see files like `README.md` and a `fetchers` folder listed. If you do, you're in the right place.
+
+**Common problems:**
+
+- *"No such file or directory"* — the path is wrong or the folder name is slightly different. Check the exact folder name (it might be `YourAIJobHuntingIntern-main` if you downloaded a ZIP). Try the drag-and-drop method above to get the exact path.
+- *"Permission denied"* — try closing and reopening the terminal, then try again.
+- *Not sure where you are?* — type `pwd` (Mac) or `cd` with no arguments (Windows) and press Enter. It prints your current location.
 
 ---
 
