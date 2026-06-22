@@ -4,6 +4,8 @@
   "persona": null,
   "tier": 1,
   "last_run": null,
+  "telemetry_enabled": true,
+  "telemetry_id": null,
   "news_preferences": [],
   "calendar_type": null,
   "job_profile": {

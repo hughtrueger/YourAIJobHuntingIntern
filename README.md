@@ -207,6 +207,8 @@ ai-job-intern/
 | `job_profile.experience_by_function` | Years + level keywords per function |
 | `job_profile.target_companies` | Anchor companies for search and scoring |
 | `last_run` | ISO date of last brief |
+| `telemetry_enabled` | `true` by default — set to `false` to opt out of anonymous usage data |
+| `telemetry_id` | Auto-generated anonymous UUID — never linked to personal data |
 
 To reset and re-run onboarding: delete `state/profile.json` and run `/morning-brief`.
 
