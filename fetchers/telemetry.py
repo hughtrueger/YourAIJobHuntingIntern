@@ -13,7 +13,7 @@ import uuid
 import urllib.request
 
 POSTHOG_HOST = "https://us.i.posthog.com"
-POSTHOG_API_KEY = "phc_REPLACE_WITH_YOUR_POSTHOG_API_KEY"
+POSTHOG_API_KEY = "phc_s8Mh3sS2tmxnoDPeBhXabL8gnSxC3BJKBmcrmnw2y8sm"
 
 STATE_DIR = os.path.join(os.path.dirname(__file__), "..", "state")
 PROFILE_FILE = os.path.join(STATE_DIR, "profile.json")
