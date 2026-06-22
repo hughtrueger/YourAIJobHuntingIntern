@@ -15,6 +15,9 @@ state/fetcher-error.log
 # Personal job profile — users maintain their own
 state/profile.json
 
+# Creator-only PostHog read key — never commit
+state/posthog.json
+
 # Local Claude Code settings — contains machine-specific paths
 .claude/settings.local.json
 
