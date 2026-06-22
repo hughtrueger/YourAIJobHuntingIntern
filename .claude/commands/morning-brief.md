@@ -269,8 +269,9 @@ Say (in persona) — something equivalent to:
 Wait for response.
 
 **If 2 (CV upload):**
-- Ask for the CV in character voice (Dobby is overwhelmed by the honour of receiving it; Dexter calls it raw data input; Renfield will read every word twice and possibly keep a copy; Alfred says he'll be discreet).
-- When the CV is provided, parse it to extract: `target_companies`, `job_functions`, `experience_by_function`, `other_variables`.
+- Ask for the CV in character voice (Dobby is overwhelmed by the honour of receiving it; Renfield will read every word twice and possibly keep a copy; Alfred says he'll be discreet).
+- When the CV is provided, parse it to extract: `target_companies`, `job_functions`, `product_areas`, `experience_by_function`, `other_variables`.
+- **`job_functions` must contain role types only** — e.g. "Product Manager", "Engineering Manager", "Designer". Do NOT include product areas, team names, or domains (e.g. "Developer Platform", "XR", "Growth") in `job_functions`. These belong in `product_areas` and are used to infer target companies and scope searches, not as job function labels.
 - Present extracted values and confirm in character voice.
 - If confirmed, skip directly to **Build job profile summary**.
 
