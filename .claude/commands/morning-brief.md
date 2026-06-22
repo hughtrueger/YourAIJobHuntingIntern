@@ -460,15 +460,21 @@ Output under: `## 📅 This Week`
 
 **Data gathering — in priority order:**
 
-1. **Email job alerts (Tier 2 only):** If `state/gmail_jobs.json` exists and was fetched today, read it first.
+1. **Email job alerts (Tier 2 only):** If `state/gmail_jobs.json` exists and was fetched today, read it first. Each listing includes `date_posted` (ISO date, derived from the email body or the email received date) and `email_received_date`. Use `date_posted` as the authoritative posting date for these listings — it is calculated from relative age text in the email ("3 days ago", "today") anchored to when the email arrived, so it is reliable. Google Careers alerts (`source: gmail_google_careers`) and Microsoft Careers alerts (`source: gmail_microsoft_careers`) are particularly reliable for recency.
 
-2. **Company career pages:** Fetch career pages for each company in `job_profile.target_companies`. Search for roles matching `job_profile.job_functions` and `experience_by_function.level_keywords`. Extract: title, location, **date posted**, URL.
+2. **Company career pages:** Fetch career pages for each company in `job_profile.target_companies`. Search for roles matching `job_profile.job_functions` and `experience_by_function.level_keywords`. Extract: title, location, **date posted**, URL. Look for explicit posting dates or relative ages ("posted 3 days ago") on the page.
 
-3. **Web job search:** Run targeted searches using level keywords + job function + location. Batch into one parallel call.
+3. **Web job search:** Run targeted searches using level keywords + job function + location. Batch into one parallel call. When search results include a posting date or age, capture it.
 
 4. **Job boards:** Search Indeed, Glassdoor, and Wellfound for job function + seniority keywords + location.
 
-**Deduplication:** Keep company website URLs; discard aggregator duplicates.
+**Deduplication:** Keep company website URLs; discard aggregator duplicates. If the same role appears in both email and web search, use the email's `date_posted` as it is more precise.
+
+**Posting date resolution — in priority order:**
+1. `date_posted` from `gmail_jobs.json` (most reliable for email-sourced listings)
+2. Explicit date extracted from a career page or search result
+3. `email_received_date` from `gmail_jobs.json` as a fallback (the job was posted no later than this date)
+4. "date unknown" — only if none of the above applies
 
 **Scoring each role (1–10):**
 - +3 if from a target company or clearly similar calibre
