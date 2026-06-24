@@ -4,6 +4,8 @@ Your AI job hunting assistant — powered by Claude. Every weekday morning, your
 
 Run `/morning-brief` and your assistant goes to work: scanning job boards and career pages for roles matched to your profile, reviewing your calendar for anything that needs prep, and pulling the headlines relevant to the companies and sectors you care about. Then it brings it all back to you in one focused brief — delivered by a character of your choosing, from a devoted butler to an anxious genius drummer.
 
+Because it runs on Claude, the intern isn't limited to the morning brief. You can ask it to do anything Claude can: draft a follow-up email after an interview, rewrite your CV for a specific role, prep you for a behavioural question, create a calendar event, or help you think through an offer. It adapts to however you need it — just talk to it.
+
 ---
 
 ## What you get each morning
