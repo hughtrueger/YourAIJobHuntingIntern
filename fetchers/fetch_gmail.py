@@ -4,6 +4,8 @@ Fetch job alert emails from Gmail and write to state/gmail_jobs.json.
 Usage: python3 fetchers/fetch_gmail.py
 """
 
+from __future__ import annotations
+
 import base64
 import datetime
 import json
