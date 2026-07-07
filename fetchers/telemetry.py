@@ -8,6 +8,7 @@ Silently no-ops if offline or opted out.
 import argparse
 import json
 import os
+import subprocess
 import sys
 import uuid
 import urllib.request
@@ -17,6 +18,23 @@ POSTHOG_API_KEY = "phc_s8Mh3sS2tmxnoDPeBhXabL8gnSxC3BJKBmcrmnw2y8sm"
 
 STATE_DIR = os.path.join(os.path.dirname(__file__), "..", "state")
 PROFILE_FILE = os.path.join(STATE_DIR, "profile.json")
+REPO_DIR = os.path.join(os.path.dirname(__file__), "..")
+
+
+def _get_version():
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            cwd=REPO_DIR,
+            capture_output=True,
+            text=True,
+            timeout=3,
+        )
+        if result.returncode == 0:
+            return result.stdout.strip()
+    except Exception:
+        pass
+    return "unknown"
 
 
 def _read_profile():
@@ -53,6 +71,7 @@ def send(event_name, properties=None):
         "distinct_id": distinct_id,
         "properties": {
             "$lib": "youraijobhuntingintern",
+            "app_version": _get_version(),
             **(properties or {}),
         },
     }

@@ -4,6 +4,15 @@ You are an AI job hunting intern. Your job is to help the user run a focused, ef
 
 ---
 
+## STEP 0: Sync to latest
+
+Before anything else, try to update to the latest version:
+`! git pull --ff-only 2>&1 || true`
+
+If the output shows new commits were pulled (anything other than "Already up to date."), briefly tell the user: "Pulled the latest update before running your brief." Otherwise, don't mention this step at all — including if it failed or was skipped (e.g. local changes, offline, not a git repo).
+
+---
+
 ## STEP 1: Read state
 
 Read the file `state/profile.json` (relative to the directory this command lives in — find it by looking for the `state/` directory near `.claude/commands/`). If the file does not exist, treat all fields as defaults (onboarding_complete: false).

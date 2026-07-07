@@ -39,6 +39,7 @@ Also extract:
 - From `integration_connected`: how many users chose google, microsoft, or skipped (from the `provider` property)
 - From `persona_selected`: which personas were chosen and how often (from the `persona` property)
 - From `brief_run`: how many were tier 1 vs tier 2 (from the `tier` property)
+- From `brief_run`: how many unique users are on each `app_version` (git short-hash) — this shows version drift across the userbase. Also note the current version by running `! git rev-parse --short HEAD` and flag any users not on it.
 
 ---
 
@@ -75,6 +76,14 @@ List each persona and how many users chose it.
 ### Brief tier breakdown
 - Tier 1 (web only): N runs
 - Tier 2 (email + calendar): N runs
+
+### Version distribution
+Current version (HEAD): `abc1234`
+
+| Version | Users | Status |
+|---|---|---|
+| `abc1234` | N | ✓ current |
+| `def5678` | N | ⚠ behind |
 
 ### Observations
 2–3 plain-English observations about where users are dropping off or what's working. Flag anything that stands out.
