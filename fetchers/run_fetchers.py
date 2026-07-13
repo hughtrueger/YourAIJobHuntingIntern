@@ -13,6 +13,7 @@ import datetime
 STATE_DIR = os.path.join(os.path.dirname(__file__), '..', 'state')
 PROFILE_FILE = os.path.join(STATE_DIR, 'profile.json')
 FETCHERS_DIR = os.path.dirname(__file__)
+PREWARM_SCRIPT = os.path.join(FETCHERS_DIR, 'prewarm_morning_brief.py')
 
 
 def get_profile() -> dict:
@@ -28,6 +29,23 @@ def run(script: str) -> bool:
     result = subprocess.run([sys.executable, path], capture_output=True, text=True)
     if result.returncode != 0:
         print(f"  ✗ {script} failed:")
+        print(result.stderr)
+        return False
+    print(result.stdout.strip())
+    return True
+
+
+def run_prewarm() -> bool:
+    print("  Running prewarm_morning_brief.py...")
+    result = subprocess.run(
+        [sys.executable, PREWARM_SCRIPT],
+        capture_output=True,
+        text=True,
+        env={**os.environ, 'AI_JOB_INTERN_STATE_DIR': STATE_DIR},
+        cwd=os.path.dirname(FETCHERS_DIR),
+    )
+    if result.returncode != 0:
+        print("  ✗ prewarm_morning_brief.py failed:")
         print(result.stderr)
         return False
     print(result.stdout.strip())
@@ -56,8 +74,12 @@ def main():
     ok &= run('fetch_gmail.py')
     ok &= run('fetch_calendar.py')
 
-    if ok:
-        print("✓ All fetchers completed successfully.")
+    prewarm_ok = run_prewarm()
+
+    if ok and prewarm_ok:
+        print("✓ All fetchers completed successfully and the morning brief was prewarmed.")
+    elif ok:
+        print("⚠ Fetchers completed, but the prewarm artifact could not be written.")
     else:
         print("⚠ Some fetchers failed — check state/fetcher-error.log")
         sys.exit(1)

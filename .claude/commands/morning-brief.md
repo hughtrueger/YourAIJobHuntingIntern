@@ -19,6 +19,8 @@ Read the file `state/profile.json` (relative to the directory this command lives
 
 Store the contents as your working state for this session.
 
+Before doing any slow work, check whether `state/morning_report_ready.json` exists and is fresh (generated within the last 12 hours). If it exists and `ready` is true, treat it as a prewarmed morning brief cache. Start from that artifact immediately, and avoid re-running the fetchers unless the artifact is missing, stale, or marked not ready. If the artifact is missing or stale, run `! python3 fetchers/prewarm_morning_brief.py 2>/dev/null || true` to build it before proceeding.
+
 ---
 
 ## STEP 2: Route based on state
@@ -403,6 +405,8 @@ Wait for response.
 
 Once the profile is confirmed and validated, set `onboarding_complete` to true, `last_run` to null, save state. Then run silently:
 `! python3 fetchers/telemetry.py --event onboarding_complete 2>/dev/null || true`
+
+Immediately after onboarding completes, run `! python3 fetchers/prewarm_morning_brief.py 2>/dev/null || true` to generate `state/morning_report_ready.json` for the next launch.
 
 Close onboarding in character voice before running the first brief.
 
