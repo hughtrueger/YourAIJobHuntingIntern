@@ -7,8 +7,6 @@ import logging
 import subprocess
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
-import threading
-import time
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -21,7 +19,7 @@ PORT = int(os.getenv('PORT', 8080))
 class PrewarmHandler(BaseHTTPRequestHandler):
     """HTTP handler for Cloud Run"""
 
-    def do_post(self):
+    def do_POST(self):
         """Handle POST requests to trigger prewarm"""
         logger.info("Triggering prewarm...")
         try:
@@ -55,7 +53,7 @@ class PrewarmHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps({'error': str(e)}).encode())
 
-    def do_get(self):
+    def do_GET(self):
         """Handle GET requests - return artifact or health check"""
         if self.path == '/health':
             self.send_response(200)
@@ -89,24 +87,6 @@ class PrewarmHandler(BaseHTTPRequestHandler):
         logger.info(f"{self.client_address[0]} - {format % args}")
 
 
-def run_prewarm_once():
-    """Run prewarm on startup"""
-    logger.info("Running prewarm on startup...")
-    try:
-        result = subprocess.run(
-            ['python3', 'fetchers/prewarm_morning_brief.py'],
-            capture_output=True,
-            text=True,
-            timeout=3600
-        )
-        if result.returncode == 0:
-            logger.info("Initial prewarm completed")
-        else:
-            logger.error(f"Initial prewarm failed: {result.stderr}")
-    except Exception as e:
-        logger.error(f"Error during initial prewarm: {e}")
-
-
 def start_server():
     """Start HTTP server"""
     server_address = ('', PORT)
@@ -116,8 +96,4 @@ def start_server():
 
 
 if __name__ == '__main__':
-    # Run prewarm once on startup
-    run_prewarm_once()
-    
-    # Then start the HTTP server
     start_server()
