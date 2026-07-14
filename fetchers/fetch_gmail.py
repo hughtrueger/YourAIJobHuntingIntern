@@ -25,6 +25,62 @@ MONTH_NAMES = {
     'july': 7, 'august': 8, 'september': 9, 'october': 10, 'november': 11, 'december': 12,
 }
 
+# Field-validation guards. Job-alert emails (especially LinkedIn) interleave real
+# postings with UI chrome, social cruft and, when only an HTML body is available,
+# raw markup. Without these guards the URL/anchor-based extractors happily emit
+# lines like "Save:", "49 connections in common" or a CSS fragment as a job
+# listing. A candidate must clear _is_junk_field() to be accepted as a title or
+# company.
+_JUNK_EXACT = frozenset({
+    'save', 'saved', 'apply', 'apply now', 'easy apply', 'view', 'view job',
+    'view jobs', 'view all', 'see all', 'see all jobs', 'see more', 'see more jobs',
+    'show more', 'message', 'connect', 'follow', 'following', 'unsubscribe',
+    'view profile', 'dismiss', 'report', 'share', 'promoted', 'actively recruiting',
+    'be an early applicant', 'new', 'today', 'yesterday',
+})
+_JUNK_SUBSTRINGS = (
+    'connections in common', 'mutual connection', 'people you may know',
+    'appeared in', 'who viewed your profile', 'view your profile',
+    'new follower', 'is hiring', 'jobs for you', 'update your preferences',
+)
+_HTML_CSS_MARKERS = (
+    '<', '>', 'style=', 'href=', 'class=', 'background-color', 'padding:',
+    'margin:', 'font-', 'color:#', 'px;', '{', '}',
+)
+_SOCIAL_COUNT_RE = re.compile(r'\b\d+\s+(new\s+)?(connection|follower|mutual)', re.I)
+
+
+def _is_junk_field(text: str) -> bool:
+    """Return True when text can't plausibly be a job title or company name."""
+    if not text:
+        return True
+    stripped = text.strip()
+    # Real titles/companies are a few chars up to a phrase; anything shorter is a
+    # label/separator and anything longer is a sentence or markup blob.
+    if len(stripped) < 3 or len(stripped) > 100:
+        return True
+    if stripped.startswith('http'):
+        return True
+    if stripped.endswith(':'):
+        return True
+    if not any(ch.isalpha() for ch in stripped):
+        return True
+    lowered = stripped.lower()
+    if lowered in _JUNK_EXACT:
+        return True
+    if any(marker in lowered for marker in _HTML_CSS_MARKERS):
+        return True
+    if any(sub in lowered for sub in _JUNK_SUBSTRINGS):
+        return True
+    if _SOCIAL_COUNT_RE.search(stripped):
+        return True
+    return False
+
+
+def _is_valid_listing(title: str, company: str) -> bool:
+    """A listing is only kept when both its title and company look real."""
+    return not _is_junk_field(title) and not _is_junk_field(company)
+
 
 def get_gmail_service():
     try:
@@ -184,7 +240,7 @@ def extract_google_careers_listings(body: str, email_date: datetime.date, sender
 
             date_posted = parse_date_posted(age_text, email_date)
 
-            if title and company and len(title) < 120:
+            if _is_valid_listing(title, company) and len(title) < 120:
                 listings.append({
                     'title': title,
                     'company': company,
@@ -230,17 +286,18 @@ def extract_linkedin_listings(body: str, email_date: datetime.date, sender: str,
             if 'linkedin.com/jobs' in line:
                 url = line
                 break
-        listings.append({
-            'title': title,
-            'company': company,
-            'location': '',
-            'url': url,
-            'date_posted': body_date or email_date.isoformat(),
-            'email_received_date': email_date.isoformat(),
-            'source': 'gmail_linkedin',
-            'sender': sender,
-            'subject': subject,
-        })
+        if _is_valid_listing(title, company):
+            listings.append({
+                'title': title,
+                'company': company,
+                'location': '',
+                'url': url,
+                'date_posted': body_date or email_date.isoformat(),
+                'email_received_date': email_date.isoformat(),
+                'source': 'gmail_linkedin',
+                'sender': sender,
+                'subject': subject,
+            })
 
     # Also scan for " at " patterns in body
     for i, line in enumerate(lines):
@@ -254,7 +311,8 @@ def extract_linkedin_listings(body: str, email_date: datetime.date, sender: str,
                     if lines[j].startswith('http') and 'linkedin.com' in lines[j]:
                         url = lines[j]
                         break
-                if not any(l['title'] == title and l['company'] == company for l in listings):
+                if _is_valid_listing(title, company) and not any(
+                        l['title'] == title and l['company'] == company for l in listings):
                     listings.append({
                         'title': title,
                         'company': company,
@@ -296,7 +354,7 @@ def extract_microsoft_listings(body: str, email_date: datetime.date, sender: str
                 if any(word in lines[j].lower() for word in ['remote', 'california', 'redmond', 'seattle', 'san francisco']):
                     location = lines[j]
 
-            if title and not title.startswith('http') and len(title) < 120:
+            if _is_valid_listing(title, 'Microsoft') and not title.startswith('http') and len(title) < 120:
                 listings.append({
                     'title': title,
                     'company': 'Microsoft',
@@ -363,17 +421,19 @@ def extract_job_listings(subject: str, body: str, sender: str, email_date: datet
                         date_posted = d
                     elif not location and len(lines[j]) < 80 and not age_pattern.match(lines[j]):
                         location = lines[j]
-                listings.append({
-                    'title': title,
-                    'company': company_loc.split(',')[0].strip(),
-                    'location': location or company_loc,
-                    'url': url,
-                    'date_posted': date_posted or email_date.isoformat(),
-                    'email_received_date': email_date.isoformat(),
-                    'source': 'gmail_alert',
-                    'sender': sender,
-                    'subject': subject,
-                })
+                company = company_loc.split(',')[0].strip()
+                if _is_valid_listing(title, company):
+                    listings.append({
+                        'title': title,
+                        'company': company,
+                        'location': location or company_loc,
+                        'url': url,
+                        'date_posted': date_posted or email_date.isoformat(),
+                        'email_received_date': email_date.isoformat(),
+                        'source': 'gmail_alert',
+                        'sender': sender,
+                        'subject': subject,
+                    })
 
         url_match = url_pattern.search(line)
         if url_match:
@@ -390,7 +450,8 @@ def extract_job_listings(subject: str, body: str, sender: str, email_date: datet
                 if (potential_title and len(potential_title) < 100 and
                         potential_company and len(potential_company) < 100 and
                         not potential_title.startswith('http') and
-                        not potential_company.startswith('http')):
+                        not potential_company.startswith('http') and
+                        _is_valid_listing(potential_title, potential_company)):
                     listings.append({
                         'title': potential_title,
                         'company': potential_company,
