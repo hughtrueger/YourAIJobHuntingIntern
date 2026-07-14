@@ -15,8 +15,7 @@ import json
 import os
 import subprocess
 import sys
-import traceback
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -25,6 +24,8 @@ STATE_DIR = Path(os.environ.get("AI_JOB_INTERN_STATE_DIR", ROOT_DIR / "state"))
 PROFILE_FILE = STATE_DIR / "profile.json"
 OUTPUT_FILE = STATE_DIR / "morning_report_ready.json"
 FETCHERS_DIR = Path(os.environ.get("AI_JOB_INTERN_FETCHERS_DIR", ROOT_DIR / "fetchers"))
+FETCH_TIMEOUT_SECONDS = 600
+FRESHNESS_WINDOW = timedelta(hours=12)
 
 
 def get_profile() -> dict[str, Any]:
@@ -56,7 +57,10 @@ def run_fetcher(script_name: str) -> tuple[bool, str]:
             text=True,
             env={**os.environ, "AI_JOB_INTERN_STATE_DIR": str(STATE_DIR)},
             cwd=str(ROOT_DIR),
+            timeout=FETCH_TIMEOUT_SECONDS,
         )
+    except subprocess.TimeoutExpired:
+        return False, f"timed out after {FETCH_TIMEOUT_SECONDS}s"
     except OSError as exc:
         return False, str(exc)
 
@@ -107,6 +111,30 @@ def summarize_calendar(calendar_data: dict[str, Any] | None) -> list[dict[str, A
     return items
 
 
+def parse_timestamp(value: Any) -> datetime | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    candidate = value.strip()
+    if candidate.endswith("Z"):
+        candidate = candidate[:-1] + "+00:00"
+    try:
+        parsed = datetime.fromisoformat(candidate)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def is_fresh(data: dict[str, Any] | None, now_utc: datetime) -> bool:
+    if not data:
+        return False
+    fetched_at = parse_timestamp(data.get("fetched_at"))
+    if not fetched_at:
+        return False
+    return (now_utc - fetched_at) <= FRESHNESS_WINDOW
+
+
 def build_artifact(profile: dict[str, Any]) -> dict[str, Any]:
     onboarding_complete = bool(profile.get("onboarding_complete"))
     tier = int(profile.get("tier", 1) or 1)
@@ -117,14 +145,14 @@ def build_artifact(profile: dict[str, Any]) -> dict[str, Any]:
     gmail_data = load_json(gmail_path)
     calendar_data = load_json(calendar_path)
 
+    fetch_results: list[tuple[str, bool, str]] = []
+    now_utc = datetime.now(timezone.utc)
+
     if onboarding_complete and tier >= 2 and calendar_type:
         refresh_needed = True
-        if gmail_data and calendar_data:
-            refreshed = gmail_data.get("fetched_at") or calendar_data.get("fetched_at")
-            if refreshed:
-                refresh_needed = False
+        if is_fresh(gmail_data, now_utc) and is_fresh(calendar_data, now_utc):
+            refresh_needed = False
         if refresh_needed:
-            fetch_results = []
             if tier >= 2:
                 ok_gmail, out_gmail = run_fetcher("fetch_gmail.py")
                 fetch_results.append(("gmail", ok_gmail, out_gmail))
@@ -132,14 +160,10 @@ def build_artifact(profile: dict[str, Any]) -> dict[str, Any]:
                 fetch_results.append(("calendar", ok_calendar, out_calendar))
                 gmail_data = load_json(gmail_path)
                 calendar_data = load_json(calendar_path)
-            else:
-                fetch_results = []
-    else:
-        fetch_results = []
 
     ready = bool(onboarding_complete and tier >= 2 and calendar_type and gmail_data and calendar_data)
-    generated_at = datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
-    expires_at = (datetime.utcnow() + timedelta(hours=12)).replace(microsecond=0).isoformat() + "Z"
+    generated_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    expires_at = (datetime.now(timezone.utc) + timedelta(hours=12)).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
     artifact = {
         "schema_version": 1,
@@ -191,12 +215,12 @@ def main() -> int:
     except Exception as exc:  # noqa: BLE001
         artifact = {
             "schema_version": 1,
-            "generated_at": datetime.utcnow().replace(microsecond=0).isoformat() + "Z",
-            "expires_at": (datetime.utcnow() + timedelta(hours=6)).replace(microsecond=0).isoformat() + "Z",
+            "generated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+            "expires_at": (datetime.now(timezone.utc) + timedelta(hours=6)).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
             "ready": False,
             "source": "cloud-worker-prewarm",
-            "error": str(exc),
-            "traceback": traceback.format_exc(),
+            "error": "prewarm failed",
+            "error_type": type(exc).__name__,
         }
 
     with OUTPUT_FILE.open("w") as fh:

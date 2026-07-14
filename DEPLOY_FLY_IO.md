@@ -59,9 +59,11 @@ This guides you through setup:
 
 This creates a `fly.toml` config file in your repo.
 
+> Security note: Fly apps are publicly reachable by default. Keep `PREWARM_API_TOKEN` configured and always send `X-Prewarm-Token` on `/artifact` and `POST /prewarm` calls.
+
 ---
 
-## Step 4: Configure Secrets
+## Step 4: Configure Secrets (Required)
 
 Store your OAuth token securely in Fly's secret manager.
 
@@ -77,6 +79,13 @@ flyctl secrets set GOOGLE_TOKEN="$(cat state/token.json)" -a ai-job-intern-prewa
 flyctl secrets set MICROSOFT_TOKEN="$(cat state/ms_token.json)" -a ai-job-intern-prewarm
 ```
 
+### API token for endpoint authentication (required):
+
+```bash
+PREWARM_API_TOKEN=$(openssl rand -hex 32)
+flyctl secrets set PREWARM_API_TOKEN="$PREWARM_API_TOKEN" -a ai-job-intern-prewarm
+```
+
 Verify the secret was set:
 ```bash
 flyctl secrets list -a ai-job-intern-prewarm
@@ -84,49 +93,13 @@ flyctl secrets list -a ai-job-intern-prewarm
 
 ---
 
-## Step 5: Update the Dockerfile
+## Step 5: Use the repository Dockerfile as-is
 
-Modify the `Dockerfile` to load the token from the secret at startup:
-
-```dockerfile
-FROM python:3.11-slim
-
-WORKDIR /app
-
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
-
-COPY fetchers/requirements.txt ./fetchers/requirements.txt
-RUN pip install --no-cache-dir -r fetchers/requirements.txt
-
-COPY . .
-
-# Load secrets into files at runtime
-RUN mkdir -p state
-
-# This script will be run by the entrypoint
-COPY <<EOF /app/entrypoint.sh
-#!/bin/bash
-set -e
-
-# If Google token is set as secret, write it to state/token.json
-if [ -n "$GOOGLE_TOKEN" ]; then
-  echo "$GOOGLE_TOKEN" > /app/state/token.json
-fi
-
-# If Microsoft token is set as secret, write it to state/ms_token.json
-if [ -n "$MICROSOFT_TOKEN" ]; then
-  echo "$MICROSOFT_TOKEN" > /app/state/ms_token.json
-fi
-
-# Run the prewarm script
-exec python3 /app/fetchers/prewarm_morning_brief.py
-EOF
-
-chmod +x /app/entrypoint.sh
-
-ENTRYPOINT ["/app/entrypoint.sh"]
-```
+Do **not** overwrite `Dockerfile` or `entrypoint.py` for Fly.
+The checked-in runtime already includes:
+- HTTP endpoints (`POST /prewarm`, `GET /artifact`, `GET /health`)
+- `X-Prewarm-Token` enforcement
+- prewarm execution and artifact generation
 
 ---
 
@@ -189,7 +162,7 @@ flyctl machines list -a ai-job-intern-prewarm
 
 The prewarm worker needs to write `morning_report_ready.json` somewhere accessible to your local Claude command.
 
-### Option A: Fly Volume (Recommended)
+### Option A: Fly Volume
 
 Attach a persistent volume to store the artifact:
 
@@ -202,7 +175,7 @@ Mount it in `fly.toml`:
 ```toml
 [[mounts]]
 source = "ai_intern_data"
-destination = "/app/state"
+destination = "/workspace/state"
 ```
 
 Then redeploy:
@@ -274,7 +247,7 @@ flyctl ssh console -a ai-job-intern-prewarm
 Then inside the machine:
 
 ```bash
-python3 /app/fetchers/prewarm_morning_brief.py
+python3 /workspace/fetchers/prewarm_morning_brief.py
 ```
 
 Check the output and verify `state/morning_report_ready.json` is created.
@@ -291,6 +264,7 @@ If using Fly volume + HTTP endpoint:
 
 ```bash
 curl -s -o state/morning_report_ready.json \
+  -H "X-Prewarm-Token: $PREWARM_API_TOKEN" \
   https://ai-job-intern-prewarm.fly.dev/artifact 2>/dev/null || true
 ```
 

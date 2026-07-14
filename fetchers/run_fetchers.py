@@ -14,6 +14,7 @@ STATE_DIR = os.path.join(os.path.dirname(__file__), '..', 'state')
 PROFILE_FILE = os.path.join(STATE_DIR, 'profile.json')
 FETCHERS_DIR = os.path.dirname(__file__)
 PREWARM_SCRIPT = os.path.join(FETCHERS_DIR, 'prewarm_morning_brief.py')
+FETCH_TIMEOUT_SECONDS = 600
 
 
 def get_profile() -> dict:
@@ -26,7 +27,16 @@ def get_profile() -> dict:
 def run(script: str) -> bool:
     path = os.path.join(FETCHERS_DIR, script)
     print(f"  Running {script}...")
-    result = subprocess.run([sys.executable, path], capture_output=True, text=True)
+    try:
+        result = subprocess.run(
+            [sys.executable, path],
+            capture_output=True,
+            text=True,
+            timeout=FETCH_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired:
+        print(f"  ✗ {script} timed out after {FETCH_TIMEOUT_SECONDS}s")
+        return False
     if result.returncode != 0:
         print(f"  ✗ {script} failed:")
         print(result.stderr)
@@ -37,13 +47,18 @@ def run(script: str) -> bool:
 
 def run_prewarm() -> bool:
     print("  Running prewarm_morning_brief.py...")
-    result = subprocess.run(
-        [sys.executable, PREWARM_SCRIPT],
-        capture_output=True,
-        text=True,
-        env={**os.environ, 'AI_JOB_INTERN_STATE_DIR': STATE_DIR},
-        cwd=os.path.dirname(FETCHERS_DIR),
-    )
+    try:
+        result = subprocess.run(
+            [sys.executable, PREWARM_SCRIPT],
+            capture_output=True,
+            text=True,
+            env={**os.environ, 'AI_JOB_INTERN_STATE_DIR': STATE_DIR},
+            cwd=os.path.dirname(FETCHERS_DIR),
+            timeout=FETCH_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired:
+        print(f"  ✗ prewarm_morning_brief.py timed out after {FETCH_TIMEOUT_SECONDS}s")
+        return False
     if result.returncode != 0:
         print("  ✗ prewarm_morning_brief.py failed:")
         print(result.stderr)

@@ -104,6 +104,14 @@ gcloud secrets create ai-intern-token \
 # Verify
 gcloud secrets list
 gcloud secrets describe ai-intern-token
+
+# Create an API token used by /prewarm and /artifact authentication
+PREWARM_API_TOKEN=$(openssl rand -hex 32)
+printf '%s' "$PREWARM_API_TOKEN" | gcloud secrets create ai-intern-prewarm-api-token \
+  --replication-policy="automatic" \
+  --data-file=-
+
+# Keep PREWARM_API_TOKEN available for Step 14 (Scheduler header)
 ```
 
 ### Step 7: Grant the service account access to the secret
@@ -111,6 +119,10 @@ gcloud secrets describe ai-intern-token
 ```bash
 # This allows the Cloud Run worker to read the token
 gcloud secrets add-iam-policy-binding ai-intern-token \
+  --member=serviceAccount:ai-intern-worker@ai-job-intern.iam.gserviceaccount.com \
+  --role=roles/secretmanager.secretAccessor
+
+gcloud secrets add-iam-policy-binding ai-intern-prewarm-api-token \
   --member=serviceAccount:ai-intern-worker@ai-job-intern.iam.gserviceaccount.com \
   --role=roles/secretmanager.secretAccessor
 
@@ -182,7 +194,7 @@ gcloud run deploy ai-job-intern-prewarm \
   --no-allow-unauthenticated \
   --memory=512Mi \
   --timeout=3600 \
-  --set-env-vars="AI_JOB_INTERN_STATE_DIR=/workspace/state"
+  --set-env-vars="GOOGLE_CLOUD_PROJECT=ai-job-intern,AI_JOB_INTERN_STATE_DIR=/workspace/state,GOOGLE_SECRET_NAME=ai-intern-token,PREWARM_API_TOKEN_SECRET=ai-intern-prewarm-api-token"
 
 # This will output a URL like:
 # Service URL: https://ai-job-intern-prewarm-abc123.run.app
@@ -259,7 +271,7 @@ gcloud run deploy ai-job-intern-prewarm \
   --no-allow-unauthenticated \
   --memory=512Mi \
   --timeout=3600 \
-  --set-env-vars="AI_JOB_INTERN_STATE_DIR=/workspace/state,GOOGLE_SECRET_NAME=ai-intern-token"
+  --set-env-vars="GOOGLE_CLOUD_PROJECT=ai-job-intern,AI_JOB_INTERN_STATE_DIR=/workspace/state,GOOGLE_SECRET_NAME=ai-intern-token,PREWARM_API_TOKEN_SECRET=ai-intern-prewarm-api-token"
 ```
 
 ---
@@ -275,6 +287,7 @@ gcloud scheduler jobs create http ai-job-intern-prewarm-6am \
   --http-method=POST \
   --location=us-central1 \
   --uri=https://ai-job-intern-prewarm-abc123.run.app \
+  --headers="X-Prewarm-Token=$PREWARM_API_TOKEN" \
   --oidc-service-account-email=ai-intern-worker@ai-job-intern.iam.gserviceaccount.com \
   --oidc-token-audience=https://ai-job-intern-prewarm-abc123.run.app
 
@@ -288,6 +301,7 @@ gcloud scheduler jobs create http ai-job-intern-prewarm-6am \
   --http-method=POST \
   --location=us-central1 \
   --uri=https://YOUR-CLOUD-RUN-URL \
+  --headers="X-Prewarm-Token=$PREWARM_API_TOKEN" \
   --oidc-service-account-email=ai-intern-worker@ai-job-intern.iam.gserviceaccount.com \
   --oidc-token-audience=https://YOUR-CLOUD-RUN-URL
 ```
@@ -364,6 +378,7 @@ gcloud run services call ai-job-intern-prewarm \
 # Or use the HTTP endpoint:
 curl -X POST \
   -H "Authorization: Bearer $(gcloud auth print-identity-token)" \
+  -H "X-Prewarm-Token: $PREWARM_API_TOKEN" \
   https://ai-job-intern-prewarm-abc123.run.app
 
 # Check the logs

@@ -71,7 +71,10 @@ If you want the same behavior outside your Mac, you can run the prewarm step in 
 
 ```bash
 docker build -t ai-job-intern-prewarm .
-docker run --rm -v "$PWD/state:/app/state" ai-job-intern-prewarm
+docker run --rm \
+  -e PREWARM_API_TOKEN="set-a-strong-token" \
+  -v "$PWD/state:/workspace/state" \
+  ai-job-intern-prewarm
 ```
 
 This uses the same read-only Gmail/Calendar access as the local fetchers and writes a compact `state/morning_report_ready.json` artifact. For a production deployment, mount the state directory from a persistent volume and inject secrets or tokens via your container platform's secret store.
