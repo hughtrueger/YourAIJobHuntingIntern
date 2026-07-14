@@ -55,6 +55,8 @@ def _is_junk_field(text: str) -> bool:
     if not text:
         return True
     stripped = text.strip()
+    # Real titles/companies are a few chars up to a phrase; anything shorter is a
+    # label/separator and anything longer is a sentence or markup blob.
     if len(stripped) < 3 or len(stripped) > 100:
         return True
     if stripped.startswith('http'):
