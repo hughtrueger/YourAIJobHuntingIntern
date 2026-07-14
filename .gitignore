@@ -9,6 +9,7 @@ fetchers/client_secret*.json
 # Fetched data cache — personal and ephemeral
 state/gmail_jobs.json
 state/calendar.json
+state/morning_report_ready.json
 state/fetcher.log
 state/fetcher-error.log
 

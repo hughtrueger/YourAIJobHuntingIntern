@@ -63,7 +63,21 @@ pip install -r fetchers/requirements.txt
    launchctl load ~/Library/LaunchAgents/com.aijobintern.plist
    ```
 
-Data is fetched at 8am Mon–Fri and cached in `state/`. When you run `/morning-brief`, the brief is built instantly from the cache.
+Data is fetched at 6am Mon–Fri and cached in `state/`. The same job also writes `state/morning_report_ready.json`, a compact prewarm artifact that makes `/morning-brief` much faster on startup.
+
+### Cloud worker prewarming (container-friendly)
+
+If you want the same behavior outside your Mac, you can run the prewarm step in a container worker. The repo now ships with a container entrypoint:
+
+```bash
+docker build -t ai-job-intern-prewarm .
+docker run --rm \
+  -e PREWARM_API_TOKEN="set-a-strong-token" \
+  -v "$PWD/state:/workspace/state" \
+  ai-job-intern-prewarm
+```
+
+This uses the same read-only Gmail/Calendar access as the local fetchers and writes a compact `state/morning_report_ready.json` artifact. For a production deployment, mount the state directory from a persistent volume and inject secrets or tokens via your container platform's secret store.
 
 ---
 
