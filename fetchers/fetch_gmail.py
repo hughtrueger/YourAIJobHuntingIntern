@@ -593,18 +593,85 @@ def get_lookback_days() -> int:
         return 7
 
 
+def get_job_profile() -> dict:
+    """Load job_profile from state/profile.json (empty dict if missing/unset)."""
+    if not os.path.exists(PROFILE_FILE):
+        return {}
+    with open(PROFILE_FILE) as f:
+        profile = json.load(f)
+    return profile.get('job_profile', {}) or {}
+
+
+_FUNCTION_STOPWORDS = {'of', 'the', 'a', 'and'}
+
+
+def _function_core_words(function_name: str) -> set[str]:
+    return {w for w in function_name.lower().split() if w not in _FUNCTION_STOPWORDS}
+
+
+def _contains_phrase(text_lower: str, phrase_lower: str) -> bool:
+    """
+    Word-boundary phrase match — plain substring search would let "product"
+    match inside "productivity", or "manager" inside "management". re.escape
+    handles phrases containing regex-special characters.
+    """
+    return re.search(r'\b' + re.escape(phrase_lower) + r'\b', text_lower) is not None
+
+
+def matches_job_profile(title: str, job_profile: dict) -> bool:
+    """
+    Does this listing's title plausibly match the user's job_profile? This
+    is a relevance filter, distinct from _is_valid_listing()'s structural
+    "is this even a real job field" check — a listing can be a perfectly
+    real job and still not be what this user is looking for.
+
+    A bare level keyword (e.g. "staff", "principal") is not sufficient on
+    its own — those are generic seniority modifiers that apply to any
+    discipline. A match requires either the full function phrase, or a
+    level keyword co-occurring with a core word of its function. If no
+    job_profile is set, nothing is filtered on this basis.
+    """
+    job_functions = job_profile.get('job_functions', []) or []
+    if not job_functions:
+        return True
+    title_lower = title.lower()
+    experience = job_profile.get('experience_by_function', {}) or {}
+    for fn in job_functions:
+        fn_lower = fn.lower()
+        if _contains_phrase(title_lower, fn_lower):
+            return True
+        core_words = _function_core_words(fn)
+        level_keywords = (experience.get(fn, {}) or {}).get('level_keywords', []) or []
+        for kw in level_keywords:
+            kw_lower = kw.lower()
+            if _contains_phrase(title_lower, kw_lower) and (
+                    kw_lower in fn_lower or any(_contains_phrase(title_lower, w) for w in core_words)):
+                return True
+    return False
+
+
 def main():
     service = get_gmail_service()
     lookback = get_lookback_days()
+    job_profile = get_job_profile()
 
     print(f"Fetching job alert emails (last {lookback} days)...")
     data = fetch_job_emails(service, lookback_days=lookback)
+
+    before = len(data['listings'])
+    data['listings'] = [
+        listing for listing in data['listings']
+        if matches_job_profile(listing.get('title', ''), job_profile)
+    ]
+    data['listing_count'] = len(data['listings'])
+    data['profile_filtered_count'] = before - len(data['listings'])
 
     os.makedirs(STATE_DIR, exist_ok=True)
     with open(OUTPUT_FILE, 'w') as f:
         json.dump(data, f, indent=2)
 
-    print(f"✓ Found {data['listing_count']} listings across {data['email_count']} emails")
+    print(f"✓ Found {data['listing_count']} listings across {data['email_count']} emails "
+          f"({data['profile_filtered_count']} filtered out as off-profile)")
     print(f"  Written to: {OUTPUT_FILE}")
 
 

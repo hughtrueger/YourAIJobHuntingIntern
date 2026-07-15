@@ -72,24 +72,24 @@ def run_fetcher(script_name: str) -> tuple[bool, str]:
     return True, output
 
 
-def summarize_jobs(gmail_data: dict[str, Any] | None) -> list[dict[str, Any]]:
-    if not gmail_data:
-        return []
-
-    listings = gmail_data.get("listings", []) or []
+def summarize_jobs(*sources: dict[str, Any] | None) -> list[dict[str, Any]]:
+    """Merge listings across fetcher sources (email + web) into one summary."""
     items = []
-    for listing in listings[:5]:
-        items.append(
-            {
-                "title": listing.get("title", ""),
-                "company": listing.get("company", ""),
-                "location": listing.get("location", ""),
-                "url": listing.get("url", ""),
-                "date_posted": listing.get("date_posted", ""),
-                "source": listing.get("source", ""),
-            }
-        )
-    return items
+    for source_data in sources:
+        if not source_data:
+            continue
+        for listing in (source_data.get("listings", []) or [])[:5]:
+            items.append(
+                {
+                    "title": listing.get("title", ""),
+                    "company": listing.get("company", ""),
+                    "location": listing.get("location", ""),
+                    "url": listing.get("url", ""),
+                    "date_posted": listing.get("date_posted", ""),
+                    "source": listing.get("source", ""),
+                }
+            )
+    return items[:10]
 
 
 def summarize_calendar(calendar_data: dict[str, Any] | None) -> list[dict[str, Any]]:
@@ -142,11 +142,22 @@ def build_artifact(profile: dict[str, Any]) -> dict[str, Any]:
 
     gmail_path = STATE_DIR / "gmail_jobs.json"
     calendar_path = STATE_DIR / "calendar.json"
+    web_jobs_path = STATE_DIR / "web_jobs.json"
     gmail_data = load_json(gmail_path)
     calendar_data = load_json(calendar_path)
+    web_jobs_data = load_json(web_jobs_path)
 
     fetch_results: list[tuple[str, bool, str]] = []
     now_utc = datetime.now(timezone.utc)
+
+    # web_jobs sourcing doesn't require Gmail/Calendar OAuth (tier 2) — it only
+    # needs target_companies in the profile — so it refreshes independently of
+    # the tier-2 gate below, but shares the same freshness/refresh mechanics.
+    has_target_companies = bool((profile.get("job_profile") or {}).get("target_companies"))
+    if has_target_companies and not is_fresh(web_jobs_data, now_utc):
+        ok_web, out_web = run_fetcher("fetch_web_jobs.py")
+        fetch_results.append(("web_jobs", ok_web, out_web))
+        web_jobs_data = load_json(web_jobs_path)
 
     if onboarding_complete and tier >= 2 and calendar_type:
         refresh_needed = True
@@ -181,12 +192,16 @@ def build_artifact(profile: dict[str, Any]) -> dict[str, Any]:
             "job_functions": (profile.get("job_profile") or {}).get("job_functions", []),
         },
         "summary": {
-            "job_listing_count": (gmail_data or {}).get("listing_count", 0) if gmail_data else 0,
+            "job_listing_count": (
+                (gmail_data or {}).get("listing_count", 0)
+                + (web_jobs_data or {}).get("listing_count", 0)
+            ),
+            "web_jobs_uncovered_companies": (web_jobs_data or {}).get("uncovered_companies", []),
             "calendar_event_count": (calendar_data or {}).get("event_count", 0) if calendar_data else 0,
             "ready_for_launch": ready,
         },
         "highlights": {
-            "jobs": summarize_jobs(gmail_data),
+            "jobs": summarize_jobs(gmail_data, web_jobs_data),
             "calendar": summarize_calendar(calendar_data),
         },
         "fetch_results": [
@@ -200,6 +215,7 @@ def build_artifact(profile: dict[str, Any]) -> dict[str, Any]:
         "data_files": {
             "gmail_jobs": str(gmail_path.relative_to(ROOT_DIR)) if gmail_path.exists() else None,
             "calendar": str(calendar_path.relative_to(ROOT_DIR)) if calendar_path.exists() else None,
+            "web_jobs": str(web_jobs_path.relative_to(ROOT_DIR)) if web_jobs_path.exists() else None,
         },
     }
 

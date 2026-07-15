@@ -475,11 +475,13 @@ Output under: `## 📅 This Week`
 
 1. **Email job alerts (Tier 2 only):** If `state/gmail_jobs.json` exists and was fetched today, read it first. Each listing includes `date_posted` (ISO date, derived from the email body or the email received date) and `email_received_date`. Use `date_posted` as the authoritative posting date for these listings — it is calculated from relative age text in the email ("3 days ago", "today") anchored to when the email arrived, so it is reliable. Google Careers alerts (`source: gmail_google_careers`) and Microsoft Careers alerts (`source: gmail_microsoft_careers`) are particularly reliable for recency.
 
-2. **Company career pages:** Fetch career pages for each company in `job_profile.target_companies`. Search for roles matching `job_profile.job_functions` and `experience_by_function.level_keywords`. Extract: title, location, **date posted**, URL. Look for explicit posting dates or relative ages ("posted 3 days ago") on the page.
+2. **Company career pages (deterministic, cached):** If `state/web_jobs.json` exists and was fetched today, read it. This is produced by `fetchers/fetch_web_jobs.py`, which queries Greenhouse/Lever's public ATS APIs directly for every company in `job_profile.target_companies` — no live search needed for anything it covers. Its listings are already filtered against `job_profile.job_functions`/`level_keywords`, and each carries a real `date_posted`.
 
-3. **Web job search:** Run targeted searches using level keywords + job function + location. Batch into one parallel call. When search results include a posting date or age, capture it.
+   **Do not re-search companies this file already covers** — check `covered_companies` in `web_jobs.json` before running any live search in steps 3–4 below, so the same company isn't queried twice.
 
-4. **Job boards:** Search Indeed, Glassdoor, and Wellfound for job function + seniority keywords + location.
+3. **Web job search — gap-fill only:** Run live web searches **only** for companies listed in `web_jobs.json`'s `uncovered_companies` (or all of `target_companies` if the file is missing/stale) — these are companies with no public ATS API, so there's no deterministic alternative yet. Use level keywords + job function + location. Batch into one parallel call. When search results include a posting date or age, capture it.
+
+4. **Job boards:** Search Indeed, Glassdoor, and Wellfound for job function + seniority keywords + location, to supplement whatever steps 1–3 found.
 
 **Deduplication:** Keep company website URLs; discard aggregator duplicates. If the same role appears in both email and web search, use the email's `date_posted` as it is more precise.
 
