@@ -515,6 +515,8 @@ Show the **top 10 roles**. Format each as:
 
 Always show posting age. Never omit it — if unknown, say "date unknown" explicitly.
 
+Always show the URL as its own line directly under every listing, exactly as in the template above — never drop it for brevity, and never summarise multiple listings without their individual URLs. A listing without a clickable URL is not actionable. If a listing genuinely has no URL, say "URL unavailable" explicitly rather than omitting the line.
+
 Then show a **"Roles filtered out"** section: next 5 roles, listed briefly as:
 `[Title] — [Company] | [Age] | Filtered: [reason]`
 
