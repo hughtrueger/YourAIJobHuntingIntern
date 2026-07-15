@@ -88,6 +88,7 @@ def main():
     ok = True
     ok &= run('fetch_gmail.py')
     ok &= run('fetch_calendar.py')
+    ok &= run('fetch_web_jobs.py')
 
     prewarm_ok = run_prewarm()
 
