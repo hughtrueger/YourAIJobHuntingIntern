@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"\nimport json, os\np = 'state/profile.json'\nif os.path.exists(p):\n    with open(p) as f:\n        profile = json.load(f)\n    if profile.get('onboarding_complete'):\n        print(json.dumps({'hookSpecificOutput': {'hookEventName': 'SessionStart', 'additionalContext': 'The user has already completed onboarding for this AI Job Hunting Intern tool. As your very first action this session, run the /morning-brief slash command automatically \\u2014 do not wait for the user to ask for it.'}}))\n\" 2>/dev/null || true",
+            "statusMessage": "Checking if morning brief should auto-run..."
+          }
+        ]
+      }
+    ]
+  }
+}
