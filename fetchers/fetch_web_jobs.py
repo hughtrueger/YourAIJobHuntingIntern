@@ -152,7 +152,15 @@ def _contains_phrase(text_lower: str, phrase_lower: str) -> bool:
     return re.search(r'\b' + re.escape(phrase_lower) + r'\b', text_lower) is not None
 
 
-def matches_job_profile(title: str, job_profile: dict) -> bool:
+def _company_level_override(fn: str, job_profile: dict, company: str | None) -> dict | None:
+    if not company:
+        return None
+    overrides = job_profile.get('company_level_overrides', {}) or {}
+    company_override = overrides.get(company, {}) or {}
+    return company_override.get(fn)
+
+
+def matches_job_profile(title: str, job_profile: dict, company: str | None = None) -> bool:
     """
     Does this listing's title plausibly match the user's job_profile?
     A bare level keyword (e.g. "staff", "principal") is not sufficient on
@@ -160,22 +168,60 @@ def matches_job_profile(title: str, job_profile: dict) -> bool:
     discipline ("Research Engineer, Senior Staff+" is not a PM role just
     because it contains "staff"). A match requires either the full function
     phrase, or a level keyword co-occurring with a core word of its function.
+
+    `company`, if given, is checked against `company_level_overrides` first.
+    Title seniority conventions aren't consistent across companies — the
+    same scope of work can be "Senior PM" at one company and "Group PM" at
+    another, so a global level-keyword list either over-surfaces roles that
+    are actually a level up, or silently excludes correct-level roles that
+    are titled differently at that company. When an override exists for
+    (company, function), it fully replaces the matching rule for that
+    function — including the bare-function-phrase shortcut below — because
+    "Group Product Manager" contains the phrase "Product Manager" and would
+    otherwise match regardless of the override; the whole point of an
+    override is that the company's title conventions don't line up with
+    the bare function name.
     """
     job_functions = job_profile.get('job_functions', []) or []
     if not job_functions:
         return True
     title_lower = title.lower()
-    experience = job_profile.get('experience_by_function', {}) or {}
     for fn in job_functions:
+        override = _company_level_override(fn, job_profile, company)
+        if override is not None:
+            for kw in override.get('level_keywords', []) or []:
+                if _contains_phrase(title_lower, kw.lower()):
+                    return True
+            continue  # overridden for this company -- no fallback to the global rule below
+
         fn_lower = fn.lower()
         if _contains_phrase(title_lower, fn_lower):
             return True
         core_words = _function_core_words(fn)
-        level_keywords = (experience.get(fn, {}) or {}).get('level_keywords', []) or []
+        level_keywords = (job_profile.get('experience_by_function', {}) or {}).get(fn, {}).get('level_keywords', []) or []
         for kw in level_keywords:
             kw_lower = kw.lower()
-            if _contains_phrase(title_lower, kw_lower) and (
-                    kw_lower in fn_lower or any(_contains_phrase(title_lower, w) for w in core_words)):
+            kw_words = set(kw_lower.split())
+            if kw_words & core_words:
+                # This level keyword already names the discipline itself
+                # (e.g. "director of product" / "vp of product" for the
+                # "Head of Product" function both contain "product") -- it's
+                # a complete alternate phrasing, not a bare seniority
+                # modifier, so a phrase match on it alone is sufficient.
+                if _contains_phrase(title_lower, kw_lower):
+                    return True
+                continue
+            # Regression: requiring just ANY core word co-occurring with a
+            # *bare* seniority modifier ("staff", "principal", "group pm" --
+            # words that say nothing about discipline on their own) let
+            # "Staff Product Designer" match on "product", "Principal
+            # Technical Program Manager" match on "manager", and "Principal
+            # App Store Manager" match on "manager" too -- none are Product
+            # Manager roles. Require ALL core words present (not just one),
+            # so a paraphrased-but-real match like "Manager, Product --
+            # Staff" still works without those false positives.
+            if _contains_phrase(title_lower, kw_lower) and core_words and all(
+                    _contains_phrase(title_lower, w) for w in core_words):
                 return True
     return False
 
@@ -203,7 +249,7 @@ def fetch_all(job_profile: dict) -> dict:
             uncovered_companies.append(company)
         all_listings.extend(listings)
 
-    filtered = [l for l in all_listings if matches_job_profile(l['title'], job_profile)]
+    filtered = [l for l in all_listings if matches_job_profile(l['title'], job_profile, company=l.get('company'))]
 
     return {
         'fetched_at': datetime.datetime.now().isoformat(),
