@@ -485,6 +485,15 @@ Output under: `## 📅 This Week`
 
 **Deduplication:** Keep company website URLs; discard aggregator duplicates. If the same role appears in both email and web search, use the email's `date_posted` as it is more precise.
 
+**Link health:** Each listing carries a `link_status` field with a `status` of `live`, `dead`, `redirected`, `error`, `unverifiable`, or `timeout` — `unverifiable` means the check was blocked by bot/HEAD protection and `timeout` means it didn't respond in time; neither means the role is gone, so don't treat either as a negative signal.
+
+- Listings from `web_jobs.json`/`gmail_jobs.json` already carry `link_status` from the prewarm step (`fetchers/validate_links.py`, run automatically, sequential/thorough).
+- Listings found via live web search **this session** (gap-fill for uncovered companies, job-board search) never pass through that pipeline — before presenting them, run them through the fast concurrent checker instead of leaving them unchecked:
+  `! python3 fetchers/validate_links.py --fast --json --url "<url1>" --url "<url2>" ...`
+  This returns within ~5s regardless of batch size, so it doesn't stall the brief, and prints `{"results": [...], "summary": {...}}` keyed by URL for easy matching back to listings. Set each listing's `link_status` from the corresponding result (drop `dead`, badge the rest per below).
+- **Drop `dead` listings entirely** before scoring/ranking — don't show a role you already know 404s.
+- Show the badge inline on every surviving listing per the template below (`✅` live, `❓` unverifiable/timeout/unchecked, `⚠️` redirected — redirected still renders since it might be a canonical-URL redirect rather than a closed role, but the annotation should say so).
+
 **Posting date resolution — in priority order:**
 1. `date_posted` from `gmail_jobs.json` (most reliable for email-sourced listings)
 2. Explicit date extracted from a career page or search result
@@ -508,10 +517,12 @@ Output under: `## 📅 This Week`
 Show the **top 10 roles**. Format each as:
 
 ```
-**[N]. [Job Title]** — [Company] | [Location] | ⏱ [Posted X days ago / today / this week / date unknown]
+**[N]. [Job Title]** — [Company] | [Location] | ⏱ [Posted X days ago / today / this week / date unknown] | [link badge]
 [1 sentence on why this is a match or flag] [optional character annotation on standout roles only]
 [URL]
 ```
+
+Link badge is one of: `✅ live` (link_status.status == live), `⚠️ redirected — verify before applying` (status == redirected), `❓ unchecked` (no link_status, e.g. this session's own live web search results that never passed through the fetcher). Never show a `dead` listing here — those are dropped before ranking, per the Link health rule above.
 
 Always show posting age. Never omit it — if unknown, say "date unknown" explicitly.
 
@@ -519,6 +530,8 @@ Always show the URL as its own line directly under every listing, exactly as in 
 
 Then show a **"Roles filtered out"** section: next 5 roles, listed briefly as:
 `[Title] — [Company] | [Age] | Filtered: [reason]`
+
+Close the section with an aggregate line, pulled from `link_health_score` on `web_jobs.json`/`gmail_jobs.json` (or `link_health` in the prewarm cache if reading from there): `Link health: [N] dead links caught and removed before you saw them · [X]/[Y] shown are verified live.`
 
 Output under: `## 💼 Job Listings`
 
