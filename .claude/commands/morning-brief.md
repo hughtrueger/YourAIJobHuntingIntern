@@ -510,6 +510,8 @@ Output under: `## 📅 This Week`
 
 **Sorting:** Sort by score descending. Within the same score tier, sort by date posted — most recent first. If posting date is unknown, treat as older than known dates.
 
+**Diversity cap:** After sorting, select the top 10 with a **max of 2 listings per company**, walking the sorted list in order and skipping any listing once its company has already contributed 2. This is a hard rule, not a suggestion — a company that happened to post 10 roles the same day (this has happened with Roblox) should not crowd out every other target company in the list. The point of tracking 30+ target companies is to see across all of them, not just whichever one had the busiest recruiting day. Companies excluded only because they hit the cap (not because they scored too low) are **not** "filtered out" in the negative sense — note them separately: `[Company] has [N] more open roles beyond the 2 shown — ask to see the full list.`
+
 **Open this section with a one-line character-voiced intro** (see Persona Playbook — "Brief section intro — Listings"), then present the listings.
 
 **The character voice should also colour individual listings** — use the "Character annotation on a standout listing" from the Persona Playbook on 1–2 genuinely exceptional results only. All other listings are presented straight.
@@ -528,7 +530,9 @@ Always show posting age. Never omit it — if unknown, say "date unknown" explic
 
 Always show the URL as its own line directly under every listing, exactly as in the template above — never drop it for brevity, and never summarise multiple listings without their individual URLs. A listing without a clickable URL is not actionable. If a listing genuinely has no URL, say "URL unavailable" explicitly rather than omitting the line.
 
-Then show a **"Roles filtered out"** section: next 5 roles, listed briefly as:
+Immediately after the 10 listings, add one line per company that hit the diversity cap (skip this if none did): `[Company] has [N] more open roles beyond the 2 shown — ask to see the full list.`
+
+Then show a **"Roles filtered out"** section: next 5 roles that scored too low to make the top 10 (not cap overflow — that's covered above), listed briefly as:
 `[Title] — [Company] | [Age] | Filtered: [reason]`
 
 Close the section with an aggregate line, pulled from `link_health_score` on `web_jobs.json`/`gmail_jobs.json` (or `link_health` in the prewarm cache if reading from there): `Link health: [N] dead links caught and removed before you saw them · [X]/[Y] shown are verified live.`
