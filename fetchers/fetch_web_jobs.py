@@ -79,8 +79,12 @@ def fetch_greenhouse(company: str) -> list[dict] | None:
             continue
         location = ((job.get('location') or {}).get('name') or '').strip()
         url = (job.get('absolute_url') or '').strip()
-        updated_at = job.get('updated_at') or job.get('first_published') or ''
-        date_posted = updated_at[:10] if updated_at else None
+        # first_published is a stable, immutable posting date. updated_at
+        # moves every time Greenhouse re-syncs the listing (even with no
+        # real content change), which silently inflates the recency score
+        # on every subsequent fetch if used as the primary source.
+        posted_at = job.get('first_published') or job.get('updated_at') or ''
+        date_posted = posted_at[:10] if posted_at else None
         listings.append({
             'title': title,
             'company': company,

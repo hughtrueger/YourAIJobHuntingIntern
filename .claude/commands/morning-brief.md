@@ -508,6 +508,12 @@ Output under: `## 📅 This Week`
 - +1 if location matches preference
 - −2 if experience requirement is significantly mismatched
 
+**Interpreting location strings for the +1 bonus** — don't require the literal word "Remote" to appear:
+- A bare `"United States"` entry alongside specific hub cities (e.g. `"San Francisco, CA • New York, NY • United States"`) means remote-within-the-US is an option, even with no "Remote" keyword present.
+- `"Remote, <state>"` matches if `<state>` is the user's home state/region — don't treat state-scoped remote as a mismatch just because it isn't nationwide.
+- A list of hub cities with no remote qualifier at all is ambiguous, not a confirmed non-match — check whether the company is broadly known to be remote-friendly (e.g. Stripe) before either awarding or withholding the point; don't default to withholding.
+- Only skip the bonus (and don't fabricate one) when the listing is genuinely a single non-remote city outside the user's stated commute range (e.g. Bengaluru, London, Toronto for a US-based user) — those are real mismatches, not ambiguous ones.
+
 **Sorting:** Sort by score descending. Within the same score tier, sort by date posted — most recent first. If posting date is unknown, treat as older than known dates.
 
 **Diversity cap:** After sorting, select the top 10 with a **max of 2 listings per company**, walking the sorted list in order and skipping any listing once its company has already contributed 2. This is a hard rule, not a suggestion — a company that happened to post 10 roles the same day (this has happened with Roblox) should not crowd out every other target company in the list. The point of tracking 30+ target companies is to see across all of them, not just whichever one had the busiest recruiting day. Companies excluded only because they hit the cap (not because they scored too low) are **not** "filtered out" in the negative sense — note them separately: `[Company] has [N] more open roles beyond the 2 shown — ask to see the full list.`
