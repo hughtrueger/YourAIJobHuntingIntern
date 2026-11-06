@@ -91,6 +91,90 @@ class ProfileMatchTests(unittest.TestCase):
         self.assertFalse(fwj.matches_job_profile(
             'Staff+ Software Engineer, Developer Productivity', JOB_PROFILE))
 
+    def test_rejects_designer_and_tpm_titles_sharing_one_core_word(self):
+        # Regression, found live in state/web_jobs.json: requiring just ANY
+        # core word let "Staff Product Designer" match on "product" alone
+        # and "Principal Technical Program Manager" / "Principal App Store
+        # Manager" match on "manager" alone. None of these are Product
+        # Manager roles.
+        self.assertFalse(fwj.matches_job_profile('Staff Product Designer, Risk', JOB_PROFILE))
+        self.assertFalse(fwj.matches_job_profile(
+            'Principal Technical Program Manager, Compute', JOB_PROFILE))
+        self.assertFalse(fwj.matches_job_profile('Principal App Store Manager', JOB_PROFILE))
+
+    def test_head_of_product_level_keywords_match_their_own_alternate_titles(self):
+        # "Director of Product" / "VP of Product" are complete alternate
+        # phrasings for the Head of Product function, not seniority
+        # modifiers layered on the bare function name -- they must match
+        # even though neither contains the literal word "head".
+        profile = {
+            'job_functions': ['Head of Product'],
+            'experience_by_function': {
+                'Head of Product': {
+                    'years': 10,
+                    'level_keywords': ['head of product', 'director of product', 'vp product', 'vp of product'],
+                },
+            },
+        }
+        self.assertTrue(fwj.matches_job_profile('Director of Product, Payments', profile))
+        self.assertTrue(fwj.matches_job_profile('VP of Product, Platform', profile))
+        self.assertTrue(fwj.matches_job_profile('VP Product, Growth', profile))
+        self.assertFalse(fwj.matches_job_profile('Director of Engineering', profile))
+
+    def test_company_level_override_replaces_global_level_keywords(self):
+        # Title seniority isn't consistent across companies — e.g. a user may
+        # target Senior PM at Coinbase rather than Group PM (Group PM is a
+        # level up there). A company override should make an abbreviated
+        # "Senior PM" title match for that company even though neither the
+        # bare function phrase ("Product Manager") nor the global
+        # level_keywords (staff/principal) are present.
+        profile = {
+            **JOB_PROFILE,
+            'company_level_overrides': {
+                'Coinbase': {
+                    'Product Manager': {'level_keywords': ['senior pm']},
+                },
+            },
+        }
+        self.assertTrue(fwj.matches_job_profile(
+            'Senior PM, Payments', profile, company='Coinbase'))
+
+    def test_company_level_override_is_scoped_to_that_company(self):
+        # The same abbreviated title should NOT match for a company with
+        # no override — it doesn't contain the bare "Product Manager"
+        # phrase, and "senior" isn't in Acme's (global) level_keywords.
+        profile = {
+            **JOB_PROFILE,
+            'company_level_overrides': {
+                'Coinbase': {
+                    'Product Manager': {'level_keywords': ['senior pm']},
+                },
+            },
+        }
+        self.assertFalse(fwj.matches_job_profile(
+            'Senior PM, Payments', profile, company='Acme'))
+
+    def test_company_level_override_excludes_global_keywords_not_reinstated(self):
+        # An override replaces the level keywords for that company rather
+        # than adding to them -- "Group Product Manager" (which matches
+        # the global list) should NOT match at Coinbase once overridden to
+        # senior-only, since Group PM is a level above the target there.
+        profile = {
+            **JOB_PROFILE,
+            'company_level_overrides': {
+                'Coinbase': {
+                    'Product Manager': {'level_keywords': ['senior product manager']},
+                },
+            },
+        }
+        self.assertFalse(fwj.matches_job_profile(
+            'Group Product Manager, Payments', profile, company='Coinbase'))
+        # ...but Group PM still matches normally for a company with no override.
+        self.assertTrue(fwj.matches_job_profile(
+            'Group Product Manager, Payments', {**JOB_PROFILE, 'experience_by_function': {
+                'Product Manager': {'years': 10, 'level_keywords': ['group product manager']}}},
+            company='Acme'))
+
 
 class FetchGreenhouseTests(unittest.TestCase):
     @patch.object(fwj, '_http_get_json', return_value=GREENHOUSE_RESPONSE)

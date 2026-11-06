@@ -27,6 +27,9 @@ FETCHERS_DIR = Path(os.environ.get("AI_JOB_INTERN_FETCHERS_DIR", ROOT_DIR / "fet
 FETCH_TIMEOUT_SECONDS = 600
 FRESHNESS_WINDOW = timedelta(hours=12)
 
+sys.path.insert(0, str(FETCHERS_DIR))
+import validate_links  # noqa: E402
+
 
 def get_profile() -> dict[str, Any]:
     if not PROFILE_FILE.exists():
@@ -87,6 +90,7 @@ def summarize_jobs(*sources: dict[str, Any] | None) -> list[dict[str, Any]]:
                     "url": listing.get("url", ""),
                     "date_posted": listing.get("date_posted", ""),
                     "source": listing.get("source", ""),
+                    "link_status": (listing.get("link_status") or {}).get("status"),
                 }
             )
     return items[:10]
@@ -135,6 +139,32 @@ def is_fresh(data: dict[str, Any] | None, now_utc: datetime) -> bool:
     return (now_utc - fetched_at) <= FRESHNESS_WINDOW
 
 
+def is_link_health_fresh(data: dict[str, Any] | None, now_utc: datetime) -> bool:
+    if not data:
+        return False
+    checked_at = parse_timestamp(data.get("link_health_checked_at"))
+    if not checked_at:
+        return False
+    return (now_utc - checked_at) <= FRESHNESS_WINDOW
+
+
+def refresh_link_health(path: Path, data: dict[str, Any] | None, now_utc: datetime) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
+    """Re-check listing URLs in `path` if the file exists and its link-health
+    check is stale. Returns (reloaded_data, summary_or_None). Never raises --
+    a failed check just means no link-health annotation this run, not a
+    broken brief.
+    """
+    if not data or not path.exists():
+        return data, None
+    if is_link_health_fresh(data, now_utc):
+        return data, data.get("link_health_score")
+    try:
+        summary = validate_links.annotate_listings_file(path)
+    except Exception:  # noqa: BLE001
+        return data, None
+    return load_json(path), summary
+
+
 def build_artifact(profile: dict[str, Any]) -> dict[str, Any]:
     onboarding_complete = bool(profile.get("onboarding_complete"))
     tier = int(profile.get("tier", 1) or 1)
@@ -172,6 +202,9 @@ def build_artifact(profile: dict[str, Any]) -> dict[str, Any]:
                 gmail_data = load_json(gmail_path)
                 calendar_data = load_json(calendar_path)
 
+    web_jobs_data, web_link_health = refresh_link_health(web_jobs_path, web_jobs_data, now_utc)
+    gmail_data, gmail_link_health = refresh_link_health(gmail_path, gmail_data, now_utc)
+
     ready = bool(onboarding_complete and tier >= 2 and calendar_type and gmail_data and calendar_data)
     generated_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
     expires_at = (datetime.now(timezone.utc) + timedelta(hours=12)).replace(microsecond=0).isoformat().replace("+00:00", "Z")
@@ -199,6 +232,10 @@ def build_artifact(profile: dict[str, Any]) -> dict[str, Any]:
             "web_jobs_uncovered_companies": (web_jobs_data or {}).get("uncovered_companies", []),
             "calendar_event_count": (calendar_data or {}).get("event_count", 0) if calendar_data else 0,
             "ready_for_launch": ready,
+        },
+        "link_health": {
+            "web_jobs": web_link_health,
+            "gmail_jobs": gmail_link_health,
         },
         "highlights": {
             "jobs": summarize_jobs(gmail_data, web_jobs_data),

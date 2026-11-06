@@ -9,6 +9,14 @@
             "statusMessage": "Checking if morning brief should auto-run..."
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"import json; print(json.dumps({'hookSpecificOutput': {'hookEventName': 'SessionStart', 'additionalContext': 'If the user shows any intent to work on a resume, CV, cover letter, job application or application answers, including indirectly, such as sharing a job link or asking whether to go for a role, offer to help using the apply skill. Offer once, then respect their answer.'}}))\" 2>/dev/null || true"
+          }
+        ]
       }
     ]
   }

@@ -16,6 +16,9 @@ state/fetcher-error.log
 
 # Personal job profile — users maintain their own
 state/profile.json
+state/target_companies.md
+state/applications/
+state/cv/
 
 # Creator-only PostHog read key — never commit
 state/posthog.json
