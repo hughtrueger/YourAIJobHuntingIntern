@@ -122,8 +122,8 @@ class ProfileMatchTests(unittest.TestCase):
         self.assertFalse(fwj.matches_job_profile('Director of Engineering', profile))
 
     def test_company_level_override_replaces_global_level_keywords(self):
-        # Title seniority isn't consistent across companies — e.g. Hugh is
-        # a Senior PM at Coinbase's level, not a Group PM (Group PM is a
+        # Title seniority isn't consistent across companies — e.g. a user may
+        # target Senior PM at Coinbase rather than Group PM (Group PM is a
         # level up there). A company override should make an abbreviated
         # "Senior PM" title match for that company even though neither the
         # bare function phrase ("Product Manager") nor the global
@@ -158,7 +158,7 @@ class ProfileMatchTests(unittest.TestCase):
         # An override replaces the level keywords for that company rather
         # than adding to them -- "Group Product Manager" (which matches
         # the global list) should NOT match at Coinbase once overridden to
-        # senior-only, since Group PM is a level above Hugh there.
+        # senior-only, since Group PM is a level above the target there.
         profile = {
             **JOB_PROFILE,
             'company_level_overrides': {
