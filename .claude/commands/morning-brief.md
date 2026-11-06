@@ -547,6 +547,14 @@ Output under: `## 💼 Job Listings`
 
 ---
 
+### Resume and cover letter drafting loop invite
+
+Straight after the job listings, add one line in character voice inviting the user to draft a resume or cover letter for any role above, using their rules. It must cover this: "Want a draft resume or cover letter for any of these? Tell me the role number, or run `/apply [number]`." If numbers repeat across lists, ask them to name the list too. Skip this if no roles were shown.
+
+If they pick a role, use the `apply` skill.
+
+---
+
 ### Feedback prompt
 
 Close in character voice — see Persona Playbook "Feedback prompt" for each character. The substance should cover: news topics, job filters, anything else about the brief. Offer to update `state/profile.json` based on their response.

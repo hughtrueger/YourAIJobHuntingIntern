@@ -18,6 +18,7 @@ state/fetcher-error.log
 state/profile.json
 state/target_companies.md
 state/applications/
+state/cv/
 
 # Creator-only PostHog read key — never commit
 state/posthog.json

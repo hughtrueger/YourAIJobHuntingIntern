@@ -161,6 +161,18 @@ That's it. Onboarding runs automatically and guides you through everything.
 
 ---
 
+## Resume and cover letter drafting loop
+
+The resume and cover letter drafting loop helps you draft, review and keep improving your applications. After each brief, your intern offers to draft a resume or cover letter for any role. You can also run `/apply` with a listing number, a job link or a pasted job description. It starts automatically if you mention working on an application: your intern will offer to help first.
+
+`/apply` checks your fit against every qualification, flags real gaps, shows the full draft in chat, and keeps iterating with you. Lasting corrections can become rules, with your approval. It never submits anything.
+
+- `rules/global_cv_rules.md`: the default rules, numbered so a user's own rules can refer to them
+- `state/cv/rules.md` and `state/cv/evidence.md`: your own rules and confirmed facts, which stay private
+- `tools/render_cv.py`: makes a one-column PDF (needs Chrome, or gives you HTML to print)
+
+---
+
 ## Onboarding walkthrough
 
 On first run, the intern guides you through five steps:
