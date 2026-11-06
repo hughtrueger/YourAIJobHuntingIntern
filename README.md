@@ -4,7 +4,9 @@ Your AI job hunting assistant — powered by Claude. Every weekday morning, your
 
 Run `/morning-brief` and your assistant goes to work: scanning job boards and career pages for roles matched to your profile, reviewing your calendar for anything that needs prep, and pulling the headlines relevant to the companies and sectors you care about. Then it brings it all back to you in one focused brief — delivered by a character of your choosing, from a devoted butler to an anxious genius drummer.
 
-Remember — your AI intern is running in Claude, which means you can customise them however you need to help with your hunt. Want them to draft a follow-up email after an interview, rewrite your CV for a specific role, or help with interview prep? Give them the job. Who knows — maybe your intern will surprise you.
+**Found a role you want?** The resume and cover letter drafting loop takes you from listing to application. Pick a role from your brief, run `/apply` with a job link, or just mention an application, and your intern will offer to help. It checks your fit against every qualification, flags real gaps, drafts a tailored one-page resume or cover letter, and keeps improving both the draft and your rules as you give feedback. You approve everything, and it never submits for you. [See how it works](#resume-and-cover-letter-drafting-loop).
+
+Remember — your AI intern is running in Claude, which means you can customise them however you need to help with your hunt. Want them to draft a follow-up email after an interview or help with interview prep? Give them the job. Who knows — maybe your intern will surprise you.
 
 ---
 
@@ -13,6 +15,7 @@ Remember — your AI intern is running in Claude, which means you can customise 
 - **Job listings** — matched to your profile, ranked by recency and fit, with a line on why each one made the cut
 - **Calendar** — upcoming meetings flagged for prep, conflicts surfaced, anything logistical you shouldn't walk into cold
 - **Industry news** — the headlines that matter for your search, scoped to your sectors and covering everything since your last brief
+- **Resume and cover letter drafting** — an offer to draft a tailored resume or cover letter for any role in your brief, then keep refining it with you
 
 ---
 
